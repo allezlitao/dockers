@@ -1,6 +1,8 @@
 FROM centos:centos6
 MAINTAINER allez.litao@gmail.com
 
+COPY docker-entrypoint.sh /entrypoint.sh
+
 ENV ROOT_PASSWD=centos \
 USER_PASSWD=password
 
@@ -13,9 +15,21 @@ epel-release \
 sudo \
 gedit \
 python-setuptools \
+openssh-server \
+openssh-clients \
+git \
+gcc \
+gcc-c++ \
+gdb \
+make \
+cmake \
+boost-devel \
+wget \
 && yum clean all && rm -rf /tmp/* \
 && echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel \
-&& chmod 0440 /etc/sudoers.d/wheel
+&& chmod 0440 /etc/sudoers.d/wheel \
+&& chmod +x /entrypoint.sh \
+&& chkconfig sshd on 2345
 
 # Supervisor
 RUN easy_install supervisor \
@@ -44,8 +58,8 @@ xinetd \
 && chkconfig vncserver on 3456 \
 && { \
 echo 'VNCSERVERS="0:root 1:litao"'; \
-echo 'VNCSERVERARGS[0]="-geometry 1280x960"'; \
-echo 'VNCSERVERARGS[1]="-geometry 1280x960"'; \
+echo 'VNCSERVERARGS[0]="-geometry 1360x768"'; \
+echo 'VNCSERVERARGS[1]="-geometry 1360x768"'; \
 } >> /etc/sysconfig/vncservers \
 && chkconfig xrdp on 3456 \
 && chmod -v +x /etc/init.d/xrdp \
@@ -97,6 +111,9 @@ RUN gconftool-2 --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.mand
 && gconftool-2 --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.mandatory \
 --type bool --set /desktop/gnome/remote_access/prompt_enabled false
 
-EXPOSE 5900 5901 3389
+EXPOSE 22 5900 5901 3389
+
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["supervisord"]
